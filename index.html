@@ -252,6 +252,64 @@
             text-shadow: none;
         }
 
+        .difficulty-select {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .diff-label {
+            color: #4ecdc4;
+            font-size: 10px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #4ecdc4;
+        }
+
+        .diff-btn {
+            background: transparent;
+            border: 2px solid #00ff88;
+            color: #00ff88;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 12px;
+            padding: 12px 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 10px #00ff88;
+            width: 200px;
+        }
+
+        .diff-btn:hover {
+            background: #00ff88;
+            color: #0a0a0f;
+            box-shadow: 0 0 30px #00ff88;
+            text-shadow: none;
+        }
+
+        #easyBtn {
+            border-color: #4ecdc4;
+            color: #4ecdc4;
+            text-shadow: 0 0 10px #4ecdc4;
+        }
+
+        #easyBtn:hover {
+            background: #4ecdc4;
+            color: #0a0a0f;
+            box-shadow: 0 0 30px #4ecdc4;
+        }
+
+        #hardBtn {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+            text-shadow: 0 0 10px #ff6b6b;
+        }
+
+        #hardBtn:hover {
+            background: #ff6b6b;
+            color: #0a0a0f;
+            box-shadow: 0 0 30px #ff6b6b;
+        }
+
         @keyframes blink {
             50% { border-color: transparent; }
         }
@@ -387,7 +445,12 @@
                 <div class="title">SPACE</div>
                 <div class="title" style="color: #ff6b6b; text-shadow: 0 0 20px #ff6b6b, 0 0 40px #ff6b6b;">INVADERS</div>
                 <div class="subtitle">DEFEND EARTH</div>
-                <button class="start-btn" id="startBtn">START GAME</button>
+                <div class="difficulty-select">
+                    <div class="diff-label">SELECT DIFFICULTY</div>
+                    <button class="diff-btn" id="easyBtn">EASY</button>
+                    <button class="diff-btn" id="normalBtn">NORMAL</button>
+                    <button class="diff-btn" id="hardBtn">HARD</button>
+                </div>
             </div>
             
             <div id="gameOverOverlay" class="overlay hidden">
@@ -423,6 +486,32 @@
         let lives = 3;
         let wave = 1;
         let waveAnnouncement = null;
+        let difficulty = 'normal';
+        
+        // Difficulty settings
+        const difficultySettings = {
+            easy: {
+                lives: 5,
+                alienSpeed: 0.6,
+                alienShootChance: 0.001,
+                bulletSpeed: 10,
+                shootCooldown: 200
+            },
+            normal: {
+                lives: 3,
+                alienSpeed: 1,
+                alienShootChance: 0.002,
+                bulletSpeed: 8,
+                shootCooldown: 250
+            },
+            hard: {
+                lives: 2,
+                alienSpeed: 1.5,
+                alienShootChance: 0.004,
+                bulletSpeed: 7,
+                shootCooldown: 300
+            }
+        };
         
         // Update high score display
         document.getElementById('high-score').textContent = highScore;
@@ -440,7 +529,7 @@
         // Bullets
         let playerBullets = [];
         let alienBullets = [];
-        const bulletSpeed = 8;
+        let bulletSpeed = 8;
         const alienBulletSpeed = 4;
         let canShoot = true;
         let shootCooldown = 250;
@@ -983,9 +1072,10 @@
         function nextWave() {
             wave++;
             
-            // Increase difficulty
-            alienSpeed = Math.min(3, 1 + wave * 0.2);
-            alienShootChance = Math.min(0.01, 0.002 + wave * 0.001);
+            // Increase difficulty based on starting difficulty
+            const settings = difficultySettings[difficulty];
+            alienSpeed = Math.min(3, settings.alienSpeed + wave * 0.2);
+            alienShootChance = Math.min(0.01, settings.alienShootChance + wave * 0.0005);
             
             // Reset
             initAliens();
@@ -1060,12 +1150,17 @@
             requestAnimationFrame(gameLoop);
         }
         
-        function startGame() {
+        function startGame(selectedDifficulty) {
+            difficulty = selectedDifficulty || 'normal';
+            const settings = difficultySettings[difficulty];
+            
             score = 0;
-            lives = 3;
+            lives = settings.lives;
             wave = 1;
-            alienSpeed = 1;
-            alienShootChance = 0.002;
+            alienSpeed = settings.alienSpeed;
+            alienShootChance = settings.alienShootChance;
+            bulletSpeed = settings.bulletSpeed;
+            shootCooldown = settings.shootCooldown;
             alienDirection = 1;
             
             document.getElementById('score').textContent = score;
@@ -1103,7 +1198,7 @@
             } else if (e.key === 'p' || e.key === 'P') {
                 gamePaused = !gamePaused;
             } else if (e.key === 'Enter' && !gameRunning) {
-                startGame();
+                startGame('normal');
             }
         });
         
@@ -1220,8 +1315,10 @@
         });
         
         // Button handlers
-        document.getElementById('startBtn').addEventListener('click', startGame);
-        document.getElementById('restartBtn').addEventListener('click', startGame);
+        document.getElementById('easyBtn').addEventListener('click', () => startGame('easy'));
+        document.getElementById('normalBtn').addEventListener('click', () => startGame('normal'));
+        document.getElementById('hardBtn').addEventListener('click', () => startGame('hard'));
+        document.getElementById('restartBtn').addEventListener('click', () => startGame(difficulty));
     </script>
 </body>
 </html>
